@@ -1,2 +1,2 @@
 # HeadFirstDesignPatternInCPP
-try to implement design pattern in C++
+Here I try to implement HeadFirstDesignPattern in C++
