@@ -62,22 +62,48 @@ public:
 
 class Duck
 {
-public:
+private:
 	FlyBehavior* flyBehavior;
 	QuackBehavior* quackBehavior;
 public:
+	Duck()
+	{
+		flyBehavior = NULL;
+		quackBehavior = NULL;
+	}
+	~Duck()
+	{
+		delete flyBehavior;
+		delete quackBehavior;
+	}
 	void performFly()
 	{
-		flyBehavior->fly();
+		if (flyBehavior != NULL)
+			flyBehavior->fly();
+		else
+			cout << "fly behavior is null" << endl;
 	}
 	void performQuack()
 	{
-		quackBehavior->quack();
+		if (quackBehavior != NULL)
+			quackBehavior->quack();
+		else
+			cout << "quack behavior is null" << endl;
 	}
 	virtual void display() = 0;
 	void swim()
 	{
 		cout << "All ducks float, even decoys" << endl;
+	}
+	void setFlyBehavior(FlyBehavior* fb)
+	{
+		delete flyBehavior;
+		flyBehavior = fb;
+	}
+	void setQuackBehavior(QuackBehavior* qb)
+	{
+		delete quackBehavior;
+		quackBehavior = qb;
 	}
 };
 class MallardDuck :public Duck
@@ -85,8 +111,8 @@ class MallardDuck :public Duck
 public:
 	MallardDuck()
 	{
-		flyBehavior = new FlyWithWings();
-		quackBehavior = new Quack();
+		setFlyBehavior(new FlyWithWings());
+		setQuackBehavior(new Quack());
 	}
 	void display()
 	{
@@ -99,6 +125,8 @@ int main()
 	mallard->display();
 	mallard->performFly();
 	mallard->performQuack();
+	mallard->setFlyBehavior(new FlyNoWay());
+	mallard->performFly();
 	system("pause");
 	return 0;
 }
