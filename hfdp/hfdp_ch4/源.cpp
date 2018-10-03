@@ -4,25 +4,50 @@
 
 using namespace std;
 
+class PizzaIngredientFactory
+{
+public:
+	virtual string createDough() = 0;
+	virtual string createSauce() = 0;
+	virtual string createCheese() = 0;
+	virtual string createVeggies() = 0;
+	virtual string createPepperoni() = 0;
+	virtual string createClam() = 0;
+};
+class NYPizzaIngredientFactory : public PizzaIngredientFactory
+{
+public:
+	string createDough() { return "ThinCrustDough"; }
+	string createSauce() { return "MarinaraSauce"; }
+	string createCheese() { return "ReggianoCheese"; }
+	string createVeggies() { return "Garlic Onion Mushroom RedPepper"; }
+	string createPepperoni() { return "SlicedPepperoni"; }
+	string createClam() { return "FreshClams"; }
+};
+class ChicagoPizzaIngredientFactory : public PizzaIngredientFactory
+{
+public:
+	string createDough() { return "ThinCrustDough"; }
+	string createSauce() { return "PlumTomatoSauce"; }
+	string createCheese() { return "MozzarellaCheese"; }
+	string createVeggies() { return "BlackOlives Spinach EggPlant"; }
+	string createPepperoni() { return "SlicedPepperoni"; }
+	string createClam() { return "FrozenClams"; }
+};
+
 class Pizza
 {
 protected:
 	string name;
 	string dough;
 	string sauce;
-	vector<string> toppings;
+	string veggies;
+	string cheese;
+	string pepperoni;
+	string clam;
+	PizzaIngredientFactory* ingredientFactory;
 public:
-	virtual void prepare()
-	{
-		cout << "Preparing " << name << endl;
-		cout << "Tossing dough..." << endl;
-		cout << "Adding sauce..." << endl;
-		cout << "Adding toppings:" << endl;
-		for (auto s : toppings)
-		{
-			cout << "    " << s << endl;
-		}
-	}
+	virtual void prepare() = 0;
 	virtual void bake()
 	{
 		cout << "Bake for 25 minutes at 350" << endl;
@@ -39,33 +64,40 @@ public:
 	{
 		return name;
 	}
-};
-class NYStyleCheesePizza: public Pizza
-{
-public:
-	NYStyleCheesePizza()
+	void setName(string name)
 	{
-		name = "NY Style Sauce and Cheese Pizza";
-		dough = "Thin Crust Dough";
-		sauce = "Marinara Sauce";
-
-		toppings.push_back("Grated Reggiano Cheese");
+		this->name = name;
 	}
 };
-class ChicagoStyleCheesePizza: public Pizza
+class CheesePizza : public Pizza
 {
 public:
-	ChicagoStyleCheesePizza()
+	CheesePizza(PizzaIngredientFactory* ingredientFactory)
 	{
-		name = "Chicago Style Deep Dish Cheese Pizza";
-		dough = "Extra Thick Crust Dough";
-		sauce = "Plum Tomato Sauce";
-
-		toppings.push_back("Shredded Mozzarella Cheese");
+		this->ingredientFactory = ingredientFactory;
 	}
-	void cut()
+	void prepare()
 	{
-		cout << "Cutting the pizza into square slices" << endl;
+		cout << "Preparing " << name << endl;
+		dough = ingredientFactory->createDough();
+		sauce = ingredientFactory->createSauce();
+		cheese = ingredientFactory->createCheese();
+	}
+};
+class ClamPizza :public Pizza
+{
+public:
+	ClamPizza(PizzaIngredientFactory* ingredientFactory)
+	{
+		this->ingredientFactory = ingredientFactory;
+	}
+	void prepare()
+	{
+		cout << "Preparing " << name << endl;
+		dough = ingredientFactory->createDough();
+		sauce = ingredientFactory->createSauce();
+		cheese = ingredientFactory->createCheese();
+		clam = ingredientFactory->createClam();
 	}
 };
 
@@ -90,50 +122,84 @@ public:
 		}
 		return pizza;
 	}
+	void setIngredientFactory(PizzaIngredientFactory* ingredientFactory)
+	{
+		this->ingredientFactory = ingredientFactory;
+	}
 protected:
 	virtual Pizza* createPizza(string type) = 0;
+	PizzaIngredientFactory* ingredientFactory;
 };
-
 class NYPizzaStore : public PizzaStore
 {
+public:
+	NYPizzaStore(PizzaIngredientFactory* ingredientFactory)
+	{
+		setIngredientFactory(ingredientFactory);
+	}
 protected:
 	Pizza* createPizza(string item)
 	{
+		Pizza* pizza = NULL;
 		if (item == "cheese")
-			return new NYStyleCheesePizza();
-		else
-			return NULL;
+		{
+			pizza = new CheesePizza(ingredientFactory);
+			pizza->setName("New York Style Cheese Pizza");
+		}
+		else if (item == "clam")
+		{
+			pizza = new ClamPizza(ingredientFactory);
+			pizza->setName("New York Style Clam Pizza");
+		}
+		return pizza;
 	}
 };
-
 class ChicagoPizzaStore : public PizzaStore
 {
+public:
+	ChicagoPizzaStore(PizzaIngredientFactory* ingredientFactory)
+	{
+		setIngredientFactory(ingredientFactory);
+	}
 protected:
 	Pizza* createPizza(string item)
 	{
+		Pizza* pizza = NULL;
 		if (item == "cheese")
-			return new ChicagoStyleCheesePizza();
-		else
-			return NULL;
+		{
+			pizza = new CheesePizza(ingredientFactory);
+			pizza->setName("Chicago Style Cheese Pizza");
+		}
+		else if (item == "clam")
+		{
+			pizza = new ClamPizza(ingredientFactory);
+			pizza->setName("Chicago Style Clam Pizza");
+		}
+		return pizza;
 	}
 };
 
 int main()
 {
-	PizzaStore* nyStore = new NYPizzaStore();
-	PizzaStore* chicagoStore = new ChicagoPizzaStore();
+	PizzaIngredientFactory* nyIngredientFactory = new NYPizzaIngredientFactory();
+	PizzaIngredientFactory* chicagoIngredientFactory = new ChicagoPizzaIngredientFactory();
+
+	PizzaStore* nyStore = new NYPizzaStore(nyIngredientFactory);
+	PizzaStore* chicagoStore = new ChicagoPizzaStore(chicagoIngredientFactory);
 
 	Pizza* pizza = nyStore->orderPizza("cheese");
 	cout << "Ethan ordered a " << pizza->getName() << endl;
 
 	delete pizza;
-	pizza = chicagoStore->orderPizza("cheese");
+	pizza = chicagoStore->orderPizza("clam");
 	cout << "Joel ordered a " << pizza->getName() << endl;
 	
 	delete pizza;
 	delete nyStore;
 	delete chicagoStore;
-	
+	delete nyIngredientFactory;
+	delete chicagoIngredientFactory;
+
 	system("pause");
 	return 0;
 }
