@@ -83,7 +83,6 @@ int main()
 	beverage3 = new Soy(*beverage3);
 	beverage3 = new Mocha(*beverage3);
 	cout << beverage3->getDescription() << " $" << beverage3->cost() << endl;
-
 	system("pause");
 	return 0;
 }
